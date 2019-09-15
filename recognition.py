@@ -6,8 +6,8 @@ from keras.applications import ResNet50
 from keras.layers import Layer
 from keras import regularizers
 from keras.engine.topology import Input
-from keras.layers import Activation, Add, BatchNormalization, Concatenate, Conv2D, Dense, Flatten, GlobalMaxPooling2D, \ 
-    GlobalAveragePooling2D, Lambda, MaxPooling2D, Reshape
+from keras.layers import Activation, Add, BatchNormalization, Concatenate, Conv2D, Dense, Flatten, GlobalMaxPooling2D
+from keras.layers import GlobalAveragePooling2D, Lambda, MaxPooling2D, Reshape
 
 from keras.models import Model
 from keras.optimizers import Adam
@@ -21,6 +21,7 @@ from utilities import *
 from metrics import *
 
 # ------------------- form the dataset ---------------- #
+print("================ downloading train.csv=============")
 download_file("https://s3.amazonaws.com/google-landmark/metadata/train.csv", "train.csv")
 train = pd.read_csv("train.csv")
 
@@ -48,13 +49,13 @@ for k in landmark_dict:
 all_ids = train['id'].tolist()
 all_landmarks = train['landmark_id'].tolist()
 valid_ids_dict = {x[0].split("/")[-1]:landmark_to_idx[x[1]] for x in zip(all_ids, all_landmarks) if x[1] in landmark_dict}
-valid_ids_dict = [x[0] for x in zip(all_ids, all_landmarks) if x[1] in landmark_dict]
+valid_ids_list = [x[0] for x in zip(all_ids, all_landmarks) if x[1] in landmark_dict]
 
 NUM_EXAMPLES = len(valid_ids_list)
 print("Total number of valid examples: {}".format(NUM_EXAMPLES))
 
 # -------------------------------- validation -------------------- #
-
+print("=================downloading validation dataset===================")
 download_file("https://s3.amazonaws.com/google-landmark/train/images_001.tar", "validation.tar", bar=False)
 tar = tarfile.open('validation.tar')
 tar.extractall("validation")
@@ -79,6 +80,7 @@ def pickfiles(dirr):
             count += pickfiles(dirr + "/" + f)
     return count
 
+print("================ collecting validation data =================")
 total = pickfiles("validation")
 print("total:", total)
 
@@ -101,6 +103,7 @@ shutil.rmtree("validation")
 del validation_images
 
 # ------------------------------- model ----------------- #
+print("======================= building ResNet50 model ===============")
 res = ResNet50(include_top=False, weights='imagenet', input_shape=(192, 192, 3))
 
 # making all the layers trainable
@@ -115,22 +118,23 @@ model.summary()
 
 # ------------------------------ clear block ------------#
 
-folder = '/kaggle/working'
-for file in os.listdir(folder):
-    file_path = os.path.join(folder, file)
-    if os.path.isfile(file_path):
-        os.unlink(file_path)
-    else:
-        import shutil
-        shutil.rmtree(file_path)
-
-
-gc.collect()
+#folder = '/kaggle/working'
+#for file in os.listdir(folder):
+#    file_path = os.path.join(folder, file)
+#    if os.path.isfile(file_path):
+#        os.unlink(file_path)
+#    else:
+#        import shutil
+#        shutil.rmtree(file_path)
+#
+#
+#gc.collect()
 
 #------------------------- training -------------------- #
+print("================= running ResNet50 train model 1 ==============")
 EPOCHS = 170
 opt = Adam(0.0002)
-model.compile(loss="binary_crossentropy", optmizer=opt, metrices=[accuracy_class])
+model.compile(loss="binary_crossentropy", optimizer=opt, metrics=[accuracy_class])
 model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=10, batch_size=64, steps=EPOCHS),
                     epochs = EPOCHS,
                     validation_data = [valid_x, valid_y], 
@@ -138,9 +142,10 @@ model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=10, bat
                     workers=8,
                     verbose=2)
 
+print("================= running ResNet50 train model 2 ==============")
 EPOCHS = 160
 opt = Adam(0.0001)
-model.compile(loss="binary_crossentropy", optmizer=opt, metrics=[accuracy_class])
+model.compile(loss="binary_crossentropy", optimizer=opt, metrics=[accuracy_class])
 model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=180, batch_size=48, steps=EPOCHS),
                     epochs=EPOCHS,
                     validation_data = [valid_x, valid_y],
@@ -148,6 +153,7 @@ model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=180, ba
                     workers=4,
                     verbose=2)
 
+print("================= running ResNet50 train model 3 ==============")
 EPOCHS = 50
 opt = Adam(0.00004)
 model.compile(loss="binary_crossentropy", optimizer=opt, metrics=[accuracy_class])
@@ -158,6 +164,7 @@ model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=340, ba
                     workers=4,
                     verbose=2)
 
+print("================= running ResNet50 train model 4 ==============")
 EPOCHS = 110
 opt = Adam(0.00002)
 model.compile(loss="binary_crossentropy", optimizer=opt, metrics=[accuracy_class])
@@ -169,10 +176,12 @@ model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=390, ba
                     verbose=2)
 
 # --------------------- GAP metric validation --------------#
-gap = =validateMAP()
+print("================= validating MAP metric ===============")
+gap = validateMAP()
 print(gap)
 
 # ----------------------------- testset --------------------#
+print("================= downloading test data set ==============")
 
 download_file("https://s3.amazonaws.com/google-landmark/metadata/test.csv", "test.csv")
 testdf = pd.read_csv("test.csv")
@@ -182,6 +191,7 @@ testids = testdf['id'].tolist()
 print(len(testids))
 
 #---------------------------------- prediction ------------ #
+print("================= running predication ===================")
 
 import warnings
 
@@ -218,6 +228,7 @@ for tar in range(20):
     
     tar_images = []
     tar_ids = []
+
 
     download_file("https://s3.amazonaws.com/google-landmark/test/images_{}.tar".format(tar_id), "images.tar", bar=False)
     tar = tarfile.open("images.tar")

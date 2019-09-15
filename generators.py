@@ -4,11 +4,11 @@ import shutil
 import tarfile
 import cv2
 import numpy as np
-import keras.utils import Sequence
+from keras.utils import Sequence
 
-from utilities import download_file, download_image_cv2_urllin
+from utilities import download_file, download_image_cv2_urllib
 
-class DateGen(Sequence):
+class DataGen(Sequence):
     """
     This generator downloads one tar file at each epoch. Extracts and selects the valid images
     from it to form batches. And after the epoch is complete, deletes the files to free up 
@@ -36,7 +36,7 @@ class DateGen(Sequence):
         else:
             tarfilestr = str(self.tar_idx)
 
-        download_file("https://s3.amazonaws.com/google-landmark/train/images_{}.tar".format(tarfile), "images.tar",
+        download_file("https://s3.amazonaws.com/google-landmark/train/images_{}.tar".format(tarfilestr), "images.tar",
                       bar=False)
         
         tar = tarfile.open("images.tar")

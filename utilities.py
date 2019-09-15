@@ -33,7 +33,7 @@ def download_file(url, filename, bar = True):
         print(e)
         return
 
-def download_image_cv_urllib(url):
+def download_image_cv2_urllib(url):
     """
     Modifying the url to download the 360p or 720p version actually slows it down.
     """
