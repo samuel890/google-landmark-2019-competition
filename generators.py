@@ -85,7 +85,7 @@ class DataGen(Sequence):
                 continue
         
         x = np.array(images)
-        y = np.zero((len(y_list), self.NUM_CLASSES))
+        y = np.zeros((len(y_list), self.NUM_CLASSES))
 
         for i in range(len(y_list)):
             y[i, y_list[i]] = 1.

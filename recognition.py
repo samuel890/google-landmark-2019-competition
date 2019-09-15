@@ -232,6 +232,7 @@ for tar in range(20):
 
     download_file("https://s3.amazonaws.com/google-landmark/test/images_{}.tar".format(tar_id), "images.tar", bar=False)
     tar = tarfile.open("images.tar")
+    print("==================== extracting from tar file ==================")
     tar.extractall("imagefolder")
     tar.close()
 
