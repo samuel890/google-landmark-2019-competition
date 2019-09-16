@@ -177,7 +177,7 @@ model.fit_generator(generator=DataGen(valid_ids_dict, NUM_CLASSES, start=10, bat
 
 # --------------------- GAP metric validation --------------#
 print("================= validating MAP metric ===============")
-gap = validateMAP()
+gap = validateMAP(model, valid_x, valid_y)
 print(gap)
 
 # ----------------------------- testset --------------------#
