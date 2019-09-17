@@ -62,26 +62,25 @@ def validateMAP(model, valid_x, valid_y):
     y_pred_list = []
     validM = N // batchsize + int(N % batchsize > 0)
     for i in range(validM):
-        preds = model.predict(valid_x[i * batchsize : min(N, (i + 1) * batchsize), :, :, :])
+        preds = model.predict(valid_x[i * batchsize:min(N, (i + 1) * batchsize), :, :, :])
         conf = list(np.amax(preds, axis=1))
         conf_list.extend(conf)
-        y_pred = list(np.argmax(preds, axis = 1))
+        y_pred = list(np.argmax(preds, axis=1))
         y_pred_list.extend(y_pred)
 
-    matches = list(np.array(y_pred_list) == np.array(valid_y))
+    matches = list(np.array(y_pred_list) == np.array(valid_y)..astype(np.float32))
 
     order = list(np.argsort(conf_list)[::-1])
-    orderedMatches = [matches[j] for j in order]
+    orderedMatches = [matches[o] for o in order]
 
     correct = 0.
     summ = 0.
     for i in range(len(orderedMatches)):
         correct += int(orderedMatches[i])
         summ += (correct / (i + 1)) * int(orderedMatches[i])
-    
+
     print(np.sum(matches))
     print(correct)
     print(summ / len(orderedMatches))
-
 
 
