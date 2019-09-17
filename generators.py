@@ -63,6 +63,7 @@ class DataGen(Sequence):
         return data / 255 - 0.5
 
     def __getitem__(self, index):
+        import cv2
         image_path_list = self.all_images[index * self.batch_size : min(self.total, (index + 1)) * self.batch_size]
         class_list = self.all_landmarks[index * self.batch_size : min(self.total, (index + 1)) * self.batch_size]
 
@@ -76,12 +77,14 @@ class DataGen(Sequence):
             try:
                 image_path = image_path_list[ix]
                 im = cv2.imread(image_path)
+                
                 im = cv2.resize(im, (192, 192), interpolation = cv2.INTER_AREA)
-                im = cv2.cvtColor(im.cv2.COLOR_BGR2RGB)
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
                 if im.shape == (192, 192, 3):
                     images.append(im)
                     y_list.append(class_list[ix])
-            except:
+            except Exception as e:
+                print(e)
                 continue
         
         x = np.array(images)
